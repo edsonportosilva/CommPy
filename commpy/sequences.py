@@ -97,7 +97,7 @@ def zcsequence(u, seq_length, q=0):
 
     for el in [u,seq_length,q]:
         if not float(el).is_integer():
-            raise ValueError('{} is not an integer'.format(el))
+            raise ValueError(f'{el} is not an integer')
     if u<=0:
         raise ValueError('u is not stricly positive')
     if u>=seq_length:
@@ -107,6 +107,4 @@ def zcsequence(u, seq_length, q=0):
 
     cf = seq_length%2
     n = np.arange(seq_length)
-    zcseq = np.exp( -1j * np.pi * u * n * (n+cf+2.*q) / seq_length)
-
-    return zcseq
+    return np.exp( -1j * np.pi * u * n * (n+cf+2.*q) / seq_length)

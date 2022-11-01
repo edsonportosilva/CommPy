@@ -173,7 +173,7 @@ def non_blank_line_by_line_compare(a,b):
     a = [l for l in a.split('\n') if l.strip()]
     b = [l for l in b.split('\n') if l.strip()]
     for n,line in enumerate(a):
-        if not line == b[n]:
+        if line != b[n]:
             raise AssertionError("Lines %s of a and b differ: "
                                  "\n>>> %s\n<<< %s\n" %
                                  (n,line,b[n]))

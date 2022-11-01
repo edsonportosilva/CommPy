@@ -140,8 +140,13 @@ class TestModulateHardDemodulate(ModemTestcase):
                           lambda y, _, __, ___: modem.demodulate(y, 'hard'),
                           modem.num_bits_symbol, modem.constellation, modem.Es)
         BERs = model.link_performance(EbN0dB + 10 * log10(log2(modem.m)), 5e5, 400, 720)
-        assert_allclose(BERs, BERs_expected, atol=1e-4, rtol=.1,
-                        err_msg='Wrong BER for a standard modulation with {} symbols'.format(modem.m))
+        assert_allclose(
+            BERs,
+            BERs_expected,
+            atol=1e-4,
+            rtol=0.1,
+            err_msg=f'Wrong BER for a standard modulation with {modem.m} symbols',
+        )
 
     def do_qam(self, modem):
         EbN0dB = arange(8, 25, 4)

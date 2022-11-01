@@ -118,7 +118,7 @@ class Trellis:
 
         [self.k, self.n] = g_matrix.shape
         self.code_type = code_type
-        
+
         self.total_memory = memory.sum()
         self.number_states = pow(2, self.total_memory)
         self.number_inputs = pow(2, self.k)
@@ -160,13 +160,16 @@ class Trellis:
                             # to compute their contribution to the r-th output
                             for i in range(memory[l]):
                                 outbits[r] = (outbits[r] + \
-                                              (shift_register[i + l] * generator_array[i + 1])) % 2
+                                                  (shift_register[i + l] * generator_array[i + 1])) % 2
 
                             output_generator_array[l] = generator_array[0]
                             if l == 0:
-                                feedback_array = (dec2bitarray(feedback, memory[l] + 1)[1:] * shift_register[0:memory[l]]).sum()
-                                shift_register[1:memory[l]] = \
-                                    shift_register[0:memory[l] - 1]
+                                feedback_array = (
+                                    dec2bitarray(feedback, memory[l] + 1)[1:]
+                                    * shift_register[: memory[l]]
+                                ).sum()
+
+                                shift_register[1:memory[l]] = shift_register[:memory[l] - 1]
                                 shift_register[0] = (dec2bitarray(current_input,
                                                                   self.k)[0] + feedback_array) % 2
                             else:
@@ -174,23 +177,23 @@ class Trellis:
                                                   shift_register[
                                                   l + memory[l - 1] - 1:l + memory[l - 1] + memory[l] - 1]).sum()
                                 shift_register[l + memory[l - 1]:l + memory[l - 1] + memory[l] - 1] = \
-                                    shift_register[l + memory[l - 1] - 1:l + memory[l - 1] + memory[l] - 2]
+                                        shift_register[l + memory[l - 1] - 1:l + memory[l - 1] + memory[l] - 2]
                                 shift_register[l + memory[l - 1] - 1] = \
-                                    (dec2bitarray(current_input, self.k)[l] + feedback_array) % 2
+                                        (dec2bitarray(current_input, self.k)[l] + feedback_array) % 2
 
                         # Compute the contribution of the current_input to output
                         outbits[r] = (outbits[r] + \
-                                      (np.sum(dec2bitarray(current_input, self.k) * \
-                                              output_generator_array + feedback_array) % 2)) % 2
+                                          (np.sum(dec2bitarray(current_input, self.k) * \
+                                                  output_generator_array + feedback_array) % 2)) % 2
 
                     # Update the ouput_table using the computed output value
                     self.output_table[current_state][current_input] = \
-                        bitarray2dec(outbits)
+                            bitarray2dec(outbits)
 
                     # Update the next_state_table using the new state of
                     # the shift register
                     self.next_state_table[current_state][current_input] = \
-                        bitarray2dec(shift_register)
+                            bitarray2dec(shift_register)
 
         else:
             if polynomial_format == 'MSB':
@@ -257,10 +260,10 @@ class Trellis:
     def _generate_grid(self, trellis_length):
         """ Private method """
 
-        grid = np.mgrid[0.12:0.22*trellis_length:(trellis_length+1)*(0+1j),
-                        0.1:0.5+self.number_states*0.1:self.number_states*(0+1j)].reshape(2, -1)
-
-        return grid
+        return np.mgrid[
+            0.12 : 0.22 * trellis_length : (trellis_length + 1) * (0 + 1j),
+            0.1 : 0.5 + self.number_states * 0.1 : self.number_states * (0 + 1j),
+        ].reshape(2, -1)
 
     def _generate_states(self, trellis_length, grid, state_order, state_radius, font):
         """ Private method """
@@ -303,8 +306,8 @@ class Trellis:
 
         for state_count in range(self.number_states):
             for input_count in range(self.number_inputs):
-                edge_label = str(input_count) + "/" + str(
-                        self.output_table[state_order[state_count], input_count])
+                edge_label = f"{str(input_count)}/{str(self.output_table[state_order[state_count], input_count])}"
+
                 plt.text(grid[0, state_count]-1.5*state_radius,
                          grid[1, state_count]+state_radius*(1-input_count-0.7),
                          edge_label, ha="center", family=font, size=14)
@@ -361,7 +364,10 @@ class Trellis:
         ax.add_collection(collection)
         ax.set_xticks([])
         ax.set_yticks([])
-        plt.legend(edge_patches, [str(i) + "-input" for i in range(self.number_inputs)])
+        plt.legend(
+            edge_patches, [f"{str(i)}-input" for i in range(self.number_inputs)]
+        )
+
         plt.show()
         if save_path is not None:
             plt.savefig(save_path)
@@ -425,8 +431,15 @@ class Trellis:
                     arrow_mid_y = positions[idx][1] + state_radius * 2 * math.sin(angles[idx])
 
                     # Add text
-                    plt.text(arrow_mid_x, arrow_mid_y, '({})'.format(output),
-                             ha='center', va='center', backgroundcolor=edge_colors[input])
+                    plt.text(
+                        arrow_mid_x,
+                        arrow_mid_y,
+                        f'({output})',
+                        ha='center',
+                        va='center',
+                        backgroundcolor=edge_colors[input],
+                    )
+
 
                 else:
                     # Positions
@@ -439,15 +452,22 @@ class Trellis:
                     arrow_end_x = positions[next_idx][0] - state_radius * math.cos(relative_angle - math.pi * 0.05)
                     arrow_end_y = positions[next_idx][1] - state_radius * math.sin(relative_angle - math.pi * 0.05)
                     arrow_mid_x = (arrow_start_x + arrow_end_x) / 2 + \
-                                   radius * 0.25 * math.cos((angles[idx] + angles[next_idx]) / 2) * np.sign(dx)
+                                       radius * 0.25 * math.cos((angles[idx] + angles[next_idx]) / 2) * np.sign(dx)
                     arrow_mid_y = (arrow_start_y + arrow_end_y) / 2 + \
-                                   radius * 0.25 * math.sin((angles[idx] + angles[next_idx]) / 2) * np.sign(dx)
+                                       radius * 0.25 * math.sin((angles[idx] + angles[next_idx]) / 2) * np.sign(dx)
                     text_x = arrow_mid_x + 0.01 * math.cos((angles[idx] + angles[next_idx]) / 2)
                     text_y = arrow_mid_y + 0.01 * math.sin((angles[idx] + angles[next_idx]) / 2)
 
                     # Add text
-                    plt.text(text_x, text_y, '({})'.format(output),
-                             ha='center', va='center', backgroundcolor=edge_colors[input])
+                    plt.text(
+                        text_x,
+                        text_y,
+                        f'({output})',
+                        ha='center',
+                        va='center',
+                        backgroundcolor=edge_colors[input],
+                    )
+
 
                 # Path creation
                 codes = (mpath.Path.MOVETO, mpath.Path.CURVE3, mpath.Path.CURVE3)
@@ -465,7 +485,12 @@ class Trellis:
         ax.set_xlim(radius * -2, radius * 2)
         ax.set_ylim(radius * -2, radius * 2)
         ax.add_collection(PatchCollection(state_patches, True))
-        plt.legend(arrows, [str(i) + "-input" for i in range(self.number_inputs)], loc='lower right')
+        plt.legend(
+            arrows,
+            [f"{str(i)}-input" for i in range(self.number_inputs)],
+            loc='lower right',
+        )
+
         plt.text(0, 1.5 * radius, 'Finite State Machine (output on transition)', ha='center', size=18)
         plt.show()
         if save_path is not None:
@@ -494,37 +519,41 @@ def conv_encode(message_bits, trellis, termination = 'term', puncture_matrix=Non
     n = trellis.n
     total_memory = trellis.total_memory
     rate = float(k)/n
-    
+
     code_type = trellis.code_type
 
     if puncture_matrix is None:
         puncture_matrix = np.ones((trellis.k, trellis.n))
 
     number_message_bits = np.size(message_bits)
-    
+
     if termination == 'cont':
         inbits = message_bits
         number_inbits = number_message_bits
         number_outbits = int(number_inbits/rate)
+    elif code_type == 'rsc':
+        inbits = message_bits
+        number_inbits = number_message_bits
+        number_outbits = int((number_inbits + k * total_memory)/rate)
     else:
-        # Initialize an array to contain the message bits plus the truncation zeros
-        if code_type == 'rsc':
-            inbits = message_bits
-            number_inbits = number_message_bits
-            number_outbits = int((number_inbits + k * total_memory)/rate)
-        else:
-            number_inbits = number_message_bits + total_memory + total_memory % k
-            inbits = np.zeros(number_inbits, 'int')
+        number_inbits = number_message_bits + total_memory + total_memory % k
+        inbits = np.zeros(number_inbits, 'int')
             # Pad the input bits with M zeros (L-th terminated truncation)
-            inbits[0:number_message_bits] = message_bits
-            number_outbits = int(number_inbits/rate)
+        inbits[:number_message_bits] = message_bits
+        number_outbits = int(number_inbits/rate)
 
     outbits = np.zeros(number_outbits, 'int')
     if puncture_matrix is not None:
         p_outbits = np.zeros(number_outbits, 'int')
     else:
-        p_outbits = np.zeros(int(number_outbits*
-            puncture_matrix[0:].sum()/np.size(puncture_matrix, 1)), 'int')
+        p_outbits = np.zeros(
+            int(
+                (number_outbits * puncture_matrix[:].sum())
+                / np.size(puncture_matrix, 1)
+            ),
+            'int',
+        )
+
     next_state_table = trellis.next_state_table
     output_table = trellis.output_table
 
@@ -722,16 +751,12 @@ def viterbi_decode(coded_bits, trellis, tb_depth=None, decoding_type='hard'):
         # Get the received codeword corresponding to t
         if t <= L // k:
             r_codeword = coded_bits[(t-1)*n:t*n]
-        # Pad with '0'
+        elif decoding_type in ['hard', 'soft']:
+            r_codeword[:] = 0
+        elif decoding_type == 'unquantized':
+            r_codeword[:] = -1
         else:
-            if decoding_type == 'hard':
-                r_codeword[:] = 0
-            elif decoding_type == 'soft':
-                r_codeword[:] = 0
-            elif decoding_type == 'unquantized':
-                r_codeword[:] = -1
-            else:
-                raise ValueError('The available decoding types are "hard", "soft" and "unquantized')
+            raise ValueError('The available decoding types are "hard", "soft" and "unquantized')
 
         _acs_traceback(r_codeword, trellis, decoding_type, path_metrics, paths,
                 decoded_symbols, decoded_bits, tb_count, t, count, tb_depth,

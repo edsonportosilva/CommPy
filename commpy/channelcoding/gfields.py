@@ -63,13 +63,12 @@ class GF:
 
     # Overloading multiplication operator for Galois Field
     def __mul__(self, x):
-        if len(x.elements) == len(self.elements):
-            prod_elements = arange(len(self.elements))
-            for i in range(len(self.elements)):
-                prod_elements[i] = polymultiply(self.elements[i], x.elements[i], self.m, self.prim_poly)
-            return GF(prod_elements, self.m)
-        else:
-             raise ValueError("Two sets of elements cannot be multiplied")
+        if len(x.elements) != len(self.elements):
+            raise ValueError("Two sets of elements cannot be multiplied")
+        prod_elements = arange(len(self.elements))
+        for i in range(len(self.elements)):
+            prod_elements[i] = polymultiply(self.elements[i], x.elements[i], self.m, self.prim_poly)
+        return GF(prod_elements, self.m)
 
     def power_to_tuple(self):
         """
@@ -77,10 +76,7 @@ class GF:
         """
         y = zeros(len(self.elements))
         for idx, i in enumerate(self.elements):
-            if 2**i < 2**self.m:
-                y[idx] = 2**i
-            else:
-                y[idx] = polydivide(2**i, self.prim_poly)
+            y[idx] = 2**i if 2**i < 2**self.m else polydivide(2**i, self.prim_poly)
         return GF(y, self.m)
 
     def tuple_to_power(self):
@@ -116,7 +112,6 @@ class GF:
         """
         Compute the cyclotomic cosets of the Galois field.
         """
-        coset_list = []
         x = self.tuple_to_power().elements
         mark_list = zeros(len(x))
         coset_count = 1
@@ -132,10 +127,10 @@ class GF:
                     i+=1
                 coset_count+=1
 
-        for counts in range(1, coset_count):
-            coset_list.append(GF(self.elements[mark_list==counts], self.m))
-
-        return coset_list
+        return [
+            GF(self.elements[mark_list == counts], self.m)
+            for counts in range(1, coset_count)
+        ]
 
     def minpolys(self):
         """
@@ -166,10 +161,7 @@ def polydivide(x, y):
     r = y
     while len(bin(r)) >= len(bin(y)):
         shift_count = len(bin(x)) - len(bin(y))
-        if shift_count > 0:
-            d = y << shift_count
-        else:
-            d = y
+        d = y << shift_count if shift_count > 0 else y
         x = x ^ d
         r = x
     return r
@@ -189,7 +181,7 @@ def poly_to_string(x):
         y = x%2
         x = x >> 1
         if y == 1:
-            polystr = polystr + "x^" + str(i) + " + "
+            polystr = f"{polystr}x^{str(i)} + "
         i+=1
 
     return polystr[:-2]

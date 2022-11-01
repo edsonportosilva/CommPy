@@ -520,9 +520,9 @@ class MIMOFlatChannel(_FlatChannel):
                     If betat or betar are negative.
         """
         # Check inputs
-        if abs(t) - 1 > 1e-4:
+        if abs(t) > 1.0001:
             raise ValueError('abs(t) must be one.')
-        if abs(r) - 1 > 1e-4:
+        if abs(r) > 1.0001:
             raise ValueError('abs(r) must be one.')
 
         # Construct the exponent matrix
@@ -602,9 +602,9 @@ class MIMOFlatChannel(_FlatChannel):
                     If betat or betar are negative.
         """
         # Check inputs
-        if abs(t) - 1 > 1e-4:
+        if abs(t) > 1.0001:
             raise ValueError('abs(t) must be one.')
-        if abs(r) - 1 > 1e-4:
+        if abs(r) > 1.0001:
             raise ValueError('abs(r) must be one.')
 
         # Scaling
@@ -703,6 +703,4 @@ def awgn(input_signal, snr_dB, rate=1.0):
     else:
         noise = sqrt(2 * noise_variance) * randn(len(input_signal))
 
-    output_signal = input_signal + noise
-
-    return output_signal
+    return input_signal + noise

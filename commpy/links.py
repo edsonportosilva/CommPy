@@ -146,10 +146,7 @@ class LinkModel:
             rate = Fraction(rate).limit_denominator(100)
         self.rate = rate
 
-        if decoder is None:
-            self.decoder = lambda msg: msg
-        else:
-            self.decoder = decoder
+        self.decoder = (lambda msg: msg) if decoder is None else decoder
         self.full_simulation_results = None
 
     def link_performance_full_metrics(self, SNRs, tx_max, err_min, send_chunk=None, code_rate: Fraction = Fraction(1, 1),
@@ -236,7 +233,7 @@ class LinkModel:
                     received_msg = np.empty(int(math.ceil(len(msg) / float(self.rate))))
                     for i in range(nb_symb_vector):
                         received_msg[receive_size * i:receive_size * (i + 1)] = \
-                            self.receive(channel_output[i], self.channel.channel_gains[i],
+                                self.receive(channel_output[i], self.channel.channel_gains[i],
                                          self.constellation, self.channel.noise_std ** 2)
                 else:
                     received_msg = self.receive(channel_output, self.channel.channel_gains,
@@ -322,7 +319,7 @@ class LinkModel:
                     received_msg = np.empty(int(math.ceil(len(msg) / float(self.rate))))
                     for i in range(nb_symb_vector):
                         received_msg[receive_size * i:receive_size * (i + 1)] = \
-                            self.receive(channel_output[i], self.channel.channel_gains[i],
+                                self.receive(channel_output[i], self.channel.channel_gains[i],
                                          self.constellation, self.channel.noise_std ** 2)
                 else:
                     received_msg = self.receive(channel_output, self.channel.channel_gains,

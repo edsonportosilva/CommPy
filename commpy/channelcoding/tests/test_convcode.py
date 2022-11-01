@@ -137,7 +137,7 @@ class TestConvCode(object):
         niters = 10
         blocklength = 1000
 
-        for n in range(niters):
+        for _ in range(niters):
             msg = randint(0, 2, blocklength)
 
             # Previous tests

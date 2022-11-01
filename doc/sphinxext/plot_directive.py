@@ -94,7 +94,7 @@ def setup(app):
     setup.app = app
     setup.config = app.config
     setup.confdir = app.confdir
-    
+
     app.add_config_value('plot_pre_code', '', True)
     app.add_config_value('plot_include_source', False, True)
     app.add_config_value('plot_formats', ['png', 'hires.png', 'pdf'], True)
@@ -211,7 +211,7 @@ class ImageFile(object):
         self.formats = []
 
     def filename(self, format):
-        return os.path.join(self.dirname, "%s.%s" % (self.basename, format))
+        return os.path.join(self.dirname, f"{self.basename}.{format}")
 
     def filenames(self):
         return [self.filename(fmt) for fmt in self.formats]
@@ -398,11 +398,10 @@ def unescape_doctest(text):
 
     code = ""
     for line in text.split("\n"):
-        m = re.match(r'^\s*(>>>|\.\.\.) (.*)$', line)
-        if m:
-            code += m.group(2) + "\n"
+        if m := re.match(r'^\s*(>>>|\.\.\.) (.*)$', line):
+            code += m[2] + "\n"
         elif line.strip():
-            code += "# " + line.strip() + "\n"
+            code += f"# {line.strip()}" + "\n"
         else:
             code += "\n"
     return code
@@ -587,7 +586,7 @@ except ImportError:
         def relpath(path, start=os.path.curdir):
             """Return a relative version of a path"""
             from os.path import sep, curdir, join, abspath, commonprefix, \
-                 pardir
+                         pardir
 
             if not path:
                 raise ValueError("no path specified")
@@ -599,14 +598,12 @@ except ImportError:
             i = len(commonprefix([start_list, path_list]))
 
             rel_list = [pardir] * (len(start_list)-i) + path_list[i:]
-            if not rel_list:
-                return curdir
-            return join(*rel_list)
+            return join(*rel_list) if rel_list else curdir
     elif 'nt' in sys.builtin_module_names:
         def relpath(path, start=os.path.curdir):
             """Return a relative version of a path"""
             from os.path import sep, curdir, join, abspath, commonprefix, \
-                 pardir, splitunc
+                         pardir, splitunc
 
             if not path:
                 raise ValueError("no path specified")
@@ -616,11 +613,12 @@ except ImportError:
                 unc_path, rest = splitunc(path)
                 unc_start, rest = splitunc(start)
                 if bool(unc_path) ^ bool(unc_start):
-                    raise ValueError("Cannot mix UNC and non-UNC paths (%s and %s)"
-                                                                        % (path, start))
+                    raise ValueError(f"Cannot mix UNC and non-UNC paths ({path} and {start})")
                 else:
-                    raise ValueError("path is on drive %s, start on drive %s"
-                                                        % (path_list[0], start_list[0]))
+                    raise ValueError(
+                        f"path is on drive {path_list[0]}, start on drive {start_list[0]}"
+                    )
+
             # Work out how much of the filepath is shared by start and path.
             for i in range(min(len(start_list), len(path_list))):
                 if start_list[i].lower() != path_list[i].lower():
@@ -629,8 +627,6 @@ except ImportError:
                 i += 1
 
             rel_list = [pardir] * (len(start_list)-i) + path_list[i:]
-            if not rel_list:
-                return curdir
-            return join(*rel_list)
+            return join(*rel_list) if rel_list else curdir
     else:
         raise RuntimeError("Unsupported platform (no relpath available!)")

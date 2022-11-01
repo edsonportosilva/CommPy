@@ -38,5 +38,4 @@ def add_frequency_offset(waveform, Fs, delta_f):
         Output signal with frequency offset.
     """
 
-    output_waveform = waveform*exp(1j*2*pi*(delta_f/Fs)*arange(len(waveform)))
-    return output_waveform
+    return waveform*exp(1j*2*pi*(delta_f/Fs)*arange(len(waveform)))

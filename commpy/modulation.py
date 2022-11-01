@@ -93,9 +93,7 @@ class Modem:
         mapfunc = vectorize(lambda i:
                             self._constellation[bitarray2dec(input_bits[i:i + self.num_bits_symbol])])
 
-        baseband_symbols = mapfunc(arange(0, len(input_bits), self.num_bits_symbol))
-
-        return baseband_symbols
+        return mapfunc(arange(0, len(input_bits), self.num_bits_symbol))
 
     def demodulate(self, input_symbols, demod_type, noise_var=0):
         """ Demodulate (map) a set of constellation symbols to corresponding bits.
@@ -270,11 +268,11 @@ def ofdm_tx(x, nfft, nsc, cp_length):
     cp_length = float(cp_length)
     ofdm_tx_signal = array([])
 
-    for i in range(0, shape(x)[1]):
+    for i in range(shape(x)[1]):
         symbols = x[:, i]
         ofdm_sym_freq = zeros(nfft, dtype=complex)
         ofdm_sym_freq[1:(nsc / 2) + 1] = symbols[nsc / 2:]
-        ofdm_sym_freq[-(nsc / 2):] = symbols[0:nsc / 2]
+        ofdm_sym_freq[-(nsc / 2):] = symbols[:nsc / 2]
         ofdm_sym_time = ifft(ofdm_sym_freq)
         cp = ofdm_sym_time[-cp_length:]
         ofdm_tx_signal = concatenate((ofdm_tx_signal, cp, ofdm_sym_time))
@@ -288,7 +286,7 @@ def ofdm_rx(y, nfft, nsc, cp_length):
     num_ofdm_symbols = int(len(y) / (nfft + cp_length))
     x_hat = zeros([nsc, num_ofdm_symbols], dtype=complex)
 
-    for i in range(0, num_ofdm_symbols):
+    for i in range(num_ofdm_symbols):
         ofdm_symbol = y[i * nfft + (i + 1) * cp_length:(i + 1) * (nfft + cp_length)]
         symbols_freq = fft(ofdm_symbol)
         x_hat[:, i] = concatenate((symbols_freq[-nsc / 2:], symbols_freq[1:(nsc / 2) + 1]))
@@ -314,12 +312,10 @@ def mimo_ml(y, h, constellation):
     _, n = h.shape
     m = len(constellation)
     x_ideal = empty((n, pow(m, n)), complex)
-    for i in range(0, n):
+    for i in range(n):
         x_ideal[i] = repeat(tile(constellation, pow(m, i)), pow(m, n - i - 1))
     min_idx = argmin(norm(y[:, None] - dot(h, x_ideal), axis=0))
-    x_r = x_ideal[:, min_idx]
-
-    return x_r
+    return x_ideal[:, min_idx]
 
 
 def kbest(y, h, constellation, K, noise_var=0, output_type='hard', demode=None):
@@ -377,10 +373,7 @@ def kbest(y, h, constellation, K, noise_var=0, output_type='hard', demode=None):
     m = len(constellation)
     nb_can = 1
 
-    if isinstance(constellation[0], complex):
-        const_type = complex
-    else:
-        const_type = float
+    const_type = complex if isinstance(constellation[0], complex) else float
     X = empty((nb_rx, K * m), dtype=const_type)  # Set of current candidates
     d = tile(yt[:, None], (1, K * m))  # Corresponding distance vector
     d_tot = zeros(K * m, dtype=float)  # Corresponding total distance
@@ -558,7 +551,7 @@ def best_first_detector(y, h, constellation, stack_size, noise_var, demode, llr_
             clip(counter_hyp_metric, map_metric - llr_max, map_metric + llr_max, counter_hyp_metric)
 
         # Trimming stack according to requested max stack size
-        del stacks[0][0:]  # there is no stack for the leafs
+        del stacks[0][:]
         for idx_next_stack in range(len(stacks) - 1):
             del stacks[idx_next_stack + 1][stack_size[idx_next_stack]:]
 

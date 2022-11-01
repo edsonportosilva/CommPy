@@ -127,9 +127,7 @@ def hamming_dist(in_bitarray_1, in_bitarray_2):
         Hamming distance between input bit arrays.
     """
 
-    distance = np.bitwise_xor(in_bitarray_1, in_bitarray_2).sum()
-
-    return distance
+    return np.bitwise_xor(in_bitarray_1, in_bitarray_2).sum()
 
 
 def euclid_dist(in_array1, in_array2):
@@ -149,9 +147,7 @@ def euclid_dist(in_array1, in_array2):
     distance : float
         Squared Euclidean distance between two input arrays.
     """
-    distance = ((in_array1 - in_array2) * (in_array1 - in_array2)).sum()
-
-    return distance
+    return ((in_array1 - in_array2) * (in_array1 - in_array2)).sum()
 
 
 def upsample(x, n):

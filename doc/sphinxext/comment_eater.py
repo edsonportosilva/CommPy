@@ -75,16 +75,17 @@ class CommentBlocker(object):
     def process_token(self, kind, string, start, end, line):
         """ Process a single token.
         """
-        if self.current_block.is_comment:
-            if kind == tokenize.COMMENT:
-                self.current_block.add(string, start, end, line)
-            else:
-                self.new_noncomment(start[0], end[0])
+        if (
+            self.current_block.is_comment
+            and kind == tokenize.COMMENT
+            or not self.current_block.is_comment
+            and kind != tokenize.COMMENT
+        ):
+            self.current_block.add(string, start, end, line)
+        elif self.current_block.is_comment:
+            self.new_noncomment(start[0], end[0])
         else:
-            if kind == tokenize.COMMENT:
-                self.new_comment(string, start, end, line)
-            else:
-                self.current_block.add(string, start, end, line)
+            self.new_comment(string, start, end, line)
 
     def new_noncomment(self, start_lineno, end_lineno):
         """ We are transitioning from a noncomment to a comment.
@@ -125,16 +126,13 @@ class CommentBlocker(object):
         if not self.index:
             self.make_index()
         block = self.index.get(lineno, None)
-        text = getattr(block, 'text', default)
-        return text
+        return getattr(block, 'text', default)
 
 
 def strip_comment_marker(text):
     """ Strip # markers at the front of a block of comment text.
     """
-    lines = []
-    for line in text.splitlines():
-        lines.append(line.lstrip('#'))
+    lines = [line.lstrip('#') for line in text.splitlines()]
     text = textwrap.dedent('\n'.join(lines))
     return text
 

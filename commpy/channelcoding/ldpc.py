@@ -122,18 +122,19 @@ def get_ldpc_code_params(ldpc_design_filename, compute_matrix=False):
     cnode_vnode_map_1d = cnode_vnode_map.flatten().astype(np.int32)
     vnode_cnode_map_1d = vnode_cnode_map.flatten().astype(np.int32)
 
-    ldpc_code_params = {}
+    ldpc_code_params = {
+        'n_vnodes': n_vnodes,
+        'n_cnodes': n_cnodes,
+        'max_cnode_deg': max_cnode_deg,
+        'max_vnode_deg': max_vnode_deg,
+        'cnode_adj_list': cnode_adj_list_1d,
+        'cnode_vnode_map': cnode_vnode_map_1d,
+        'vnode_adj_list': vnode_adj_list_1d,
+        'vnode_cnode_map': vnode_cnode_map_1d,
+        'cnode_deg_list': cnode_deg_list,
+        'vnode_deg_list': vnode_deg_list,
+    }
 
-    ldpc_code_params['n_vnodes'] = n_vnodes
-    ldpc_code_params['n_cnodes'] = n_cnodes
-    ldpc_code_params['max_cnode_deg'] = max_cnode_deg
-    ldpc_code_params['max_vnode_deg'] = max_vnode_deg
-    ldpc_code_params['cnode_adj_list'] = cnode_adj_list_1d
-    ldpc_code_params['cnode_vnode_map'] = cnode_vnode_map_1d
-    ldpc_code_params['vnode_adj_list'] = vnode_adj_list_1d
-    ldpc_code_params['vnode_cnode_map'] = vnode_cnode_map_1d
-    ldpc_code_params['cnode_deg_list'] = cnode_deg_list
-    ldpc_code_params['vnode_deg_list'] = vnode_deg_list
 
     if compute_matrix:
         build_matrix(ldpc_code_params)
@@ -199,8 +200,7 @@ def ldpc_bp_decode(llr_vec, ldpc_code_params, decoder_algorithm, n_iters):
         message_matrix = parity_check_matrix.multiply(llr_vec[i_start:i_stop])
 
         # Main loop of Belief Propagation (BP) decoding iterations
-        for iter_cnt in range(n_iters):
-
+        for _ in range(n_iters):
             # Compute early termination using parity check matrix
             if np.all(ldpc_code_params['parity_check_matrix'].multiply(dec_word[i_start:i_stop]).sum(1) % 2 == 0):
                 break
@@ -275,27 +275,30 @@ def write_ldpc_params(parity_check_matrix, file_path):
         File path of the LDPC code design file.
     """
     with open(file_path, 'x') as file:
-        file.write('{} {}\n'.format(parity_check_matrix.shape[1], parity_check_matrix.shape[0]))
-        file.write('{} {}\n'.format(parity_check_matrix.sum(0).max(), parity_check_matrix.sum(1).max()))
+        file.write(f'{parity_check_matrix.shape[1]} {parity_check_matrix.shape[0]}\n')
+        file.write(
+            f'{parity_check_matrix.sum(0).max()} {parity_check_matrix.sum(1).max()}\n'
+        )
+
 
         for deg in parity_check_matrix.sum(0):
-            file.write('{} '.format(deg))
+            file.write(f'{deg} ')
         file.write('\n')
         for deg in parity_check_matrix.sum(1):
-            file.write('{} '.format(deg))
+            file.write(f'{deg} ')
         file.write('\n')
 
         for line in parity_check_matrix.T:
             nodes = line.nonzero()[0]
             for node in nodes[:-1]:
-                file.write('{}\t'.format(node + 1))
-            file.write('{}\n'.format(nodes[-1] + 1))
+                file.write(f'{node + 1}\t')
+            file.write(f'{nodes[-1] + 1}\n')
 
         for col in parity_check_matrix:
             nodes = col.nonzero()[0]
             for node in nodes[:-1]:
-                file.write('{}\t'.format(node + 1))
-            file.write('{}\n'.format(nodes[-1] + 1))
+                file.write(f'{node + 1}\t')
+            file.write(f'{nodes[-1] + 1}\n')
         file.write('\n')
 
 
@@ -341,8 +344,7 @@ def triang_ldpc_systematic_encode(message_bits, ldpc_code_params, pad=True):
         build_matrix(ldpc_code_params)
 
     block_length = ldpc_code_params['generator_matrix'].shape[1]
-    modulo = len(message_bits) % block_length
-    if modulo:
+    if modulo := len(message_bits) % block_length:
         if pad:
             message_bits = np.concatenate((message_bits, np.zeros(block_length - modulo, message_bits.dtype)))
         else:

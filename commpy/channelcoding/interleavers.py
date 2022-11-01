@@ -24,8 +24,7 @@ class _Interleaver:
             Interleaved output data.
 
         """
-        out_array = in_array[self.p_array]
-        return out_array
+        return in_array[self.p_array]
 
     def deinterlv(self, in_array):
         """ De-interleave input array using the specific interleaver.

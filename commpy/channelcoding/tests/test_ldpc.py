@@ -29,15 +29,15 @@ class TestLDPCCode(object):
         ldpc_design_file = os.path.join(self.dir, '../designs/ldpc/gallager/96.33.964.txt')
         ldpc_code_params = get_ldpc_code_params(ldpc_design_file)
 
+        rate = 0.5
+        Es = 1.0
+        niters = 10000000
+        ldpcbp_iters = 100
+
         for n_blocks in (1, 2):
             N = 96 * n_blocks
-            rate = 0.5
-            Es = 1.0
             snr_list = array([2.0, 2.5])
-            niters = 10000000
             tx_codeword = zeros(N, int)
-            ldpcbp_iters = 100
-
             for decoder_algorithm in ('MSA', 'SPA'):
                 fer_array_ref = array((.2, .1))
                 fer_array_test = zeros(len(snr_list))
@@ -62,14 +62,19 @@ class TestLDPCCode(object):
                             fer_array_test[idx] = float(fer_cnt_bp) / (iter_cnt + 1) / n_blocks
                             break
 
-                assert_allclose(fer_array_test, fer_array_ref, rtol=.6, atol=0,
-                                err_msg=decoder_algorithm + ' algorithm does not perform as expected.')
+                assert_allclose(
+                    fer_array_test,
+                    fer_array_ref,
+                    rtol=0.6,
+                    atol=0,
+                    err_msg=f'{decoder_algorithm} algorithm does not perform as expected.',
+                )
 
     def test_write_ldpc_params(self):
         with TemporaryDirectory() as tmp_dir:
             parity_check_matrix = choice((0, 1), (720, 1440))
 
-            file_path = tmp_dir + '/matrix.txt'
+            file_path = f'{tmp_dir}/matrix.txt'
             write_ldpc_params(parity_check_matrix, file_path)
             assert_equal(get_ldpc_code_params(file_path, True)['parity_check_matrix'].toarray(), parity_check_matrix,
                          'The loaded matrix is not equal to the written one.')

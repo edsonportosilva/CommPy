@@ -52,9 +52,9 @@ def turbo_encode(msg_bits, trellis1, trellis2, interleaver):
     puncture_matrix = array([[0, 1]])
     non_sys_stream_2 = conv_encode(interlv_msg_bits, trellis2, 'rsc', puncture_matrix)
 
-    sys_stream = sys_stream[0:-trellis1.total_memory]
-    non_sys_stream_1 = non_sys_stream_1[0:-trellis1.total_memory]
-    non_sys_stream_2 = non_sys_stream_2[0:-trellis2.total_memory]
+    sys_stream = sys_stream[:-trellis1.total_memory]
+    non_sys_stream_1 = non_sys_stream_1[:-trellis1.total_memory]
+    non_sys_stream_2 = non_sys_stream_2[:-trellis2.total_memory]
 
     return [sys_stream, non_sys_stream_1, non_sys_stream_2]
 
@@ -70,10 +70,7 @@ def _compute_branch_prob(code_bit_0, code_bit_1, rx_symbol_0, rx_symbol_1,
     x = rx_symbol_0 - code_symbol_0
     y = rx_symbol_1 - code_symbol_1
 
-    # Normalized branch transition probability
-    branch_prob = exp(-(x*x + y*y)/(2*noise_variance))
-
-    return branch_prob
+    return exp(-(x*x + y*y)/(2*noise_variance))
 
 def _backward_recursion(trellis, msg_length, noise_variance,
                         sys_symbols, non_sys_symbols, branch_probs,
@@ -146,11 +143,7 @@ def _forward_recursion_decoding(trellis, mode, msg_length, noise_variance,
         L_ext[time_index-1] = lappr
 
         if mode == 'decode':
-            if lappr > 0:
-                decoded_bits[time_index-1] = 1
-            else:
-                decoded_bits[time_index-1] = 0
-
+            decoded_bits[time_index-1] = 1 if lappr > 0 else 0
         # Normalization of the forward state metrics
         f_state_metrics[:,1] = f_state_metrics[:,1]/f_state_metrics[:,1].sum()
 
@@ -317,11 +310,7 @@ def turbo_decode(sys_symbols, non_sys_symbols_1, non_sys_symbols_2, trellis,
 
         L_ext_1 = L_ext_1 - L_int_1
         L_int_2 = interleaver.interlv(L_ext_1)
-        if iteration_count == number_iterations - 1:
-            mode = 'decode'
-        else:
-            mode = 'compute'
-
+        mode = 'decode' if iteration_count == number_iterations - 1 else 'compute'
         # MAP Decoder - 2
         [L_2, decoded_bits] = map_decode(sys_symbols_i, non_sys_symbols_2,
                                          trellis, noise_variance, L_int_2, mode)

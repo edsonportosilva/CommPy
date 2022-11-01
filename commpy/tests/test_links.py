@@ -91,11 +91,20 @@ def test_link_performance():
 
     for test in range(len(models)):
         BERs = link_performance(models[test], snr_range[test], 5e5, 200, 720, models[test].rate)
-        assert_allclose(BERs, desired_bers[test], rtol=rtols[test],
-                        err_msg='Wrong performance for ' + labels[test])
+        assert_allclose(
+            BERs,
+            desired_bers[test],
+            rtol=rtols[test],
+            err_msg=f'Wrong performance for {labels[test]}',
+        )
+
         full_metrics = models[test].link_performance_full_metrics(snr_range[test], 2500, 200, 720, models[test].rate)
-        assert_allclose(full_metrics[0], desired_bers[test], rtol=rtols[test],
-                        err_msg='Wrong performance for ' + labels[test])
+        assert_allclose(
+            full_metrics[0],
+            desired_bers[test],
+            rtol=rtols[test],
+            err_msg=f'Wrong performance for {labels[test]}',
+        )
 
 
 if __name__ == "__main__":
